@@ -1,7 +1,7 @@
-const fs = require('fs/promises');
+const { Types } = require('mongoose');
+const { User } = require('../models/userModel');
 const { catchAsync } = require('../utils/catchAsync');
 const { HttpError } = require('../utils/httpError');
-const { customReadFile } = require('../utils/customReadFile');
 const {
   userDataValidator,
   updateUserDataValidator,
@@ -10,28 +10,34 @@ const {
 const checkUserId = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
-  const users = await customReadFile('data.json');
+  const idIsValid = Types.ObjectId.isValid(id);
 
-  const currentUser = users.find((user) => user.id === id);
+  if (!idIsValid) throw new HttpError(404, 'User not found..');
 
-  if (!currentUser) {
-    throw new HttpError(404, 'User not found');
-  }
+  const user = await User.findById(id);
 
-  req.user = currentUser;
+  if (!user) throw new HttpError(404, 'User not found..');
+
+  req.user = user;
 
   next();
 });
 
-const checkUserData = (req, res, next) => {
+const checkUserData = catchAsync(async (req, res, next) => {
   const { value, errors } = userDataValidator(req.body);
 
   if (errors) throw new HttpError(400, 'Invalid user data..', errors);
 
-  req.value = value;
+  const userExists = await User.exists({ email: value.email });
+
+  if (userExists) {
+    throw new HttpError(409, 'User with that email already exists..');
+  }
+
+  req.body = value;
 
   next();
-};
+});
 
 const checkUpdateUserData = (req, res, next) => {
   const { value, errors } = updateUserDataValidator(req.body);
@@ -42,7 +48,7 @@ const checkUpdateUserData = (req, res, next) => {
     throw new HttpError(400, 'Body must have at least one field', errors);
   }
 
-  req.value = value;
+  req.body = value;
 
   next();
 };

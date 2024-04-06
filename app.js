@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const dotenv = require('dotenv');
-const { userRouter } = require('./routes/userRouter');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-dotenv.config();
+const { userRouter } = require('./routes/userRouter');
 
 const app = express();
 
@@ -39,24 +39,38 @@ app.use(`${pathPrefix}/users`, userRouter);
 
 // ============= Error handler =========
 
-app.use((_, res) => {
-  res.status(404).json({ message: 'Route not found' });
+app.use((_, res, __) => {
+  res.status(404).json({
+    status: 'error',
+    code: 404,
+    message: 'Use api on routes: /api/users',
+    data: 'Not found',
+  });
 });
 
-app.use((err, req, res, next) => {
-  const { status = 500, message = 'Server error', data } = err;
-  if (process.env.NODE_ENV === 'development') {
-    res.status(status).json({ message, errors: data });
-    return;
-  }
-
-  res.status(status).json({ message });
+app.use((err, _, res, __) => {
+  console.log(err.stack);
+  res.status(500).json({
+    status: 'fail',
+    code: 500,
+    message: err.message,
+    data: 'Internal Server Error',
+  });
 });
 
-// ============= Server init ===============
+// DB connection + Server connection
 
-const port = +process.env.PORT;
+const PORT = process.env.PORT || 3000;
+const uriDb = process.env.DB_URI;
 
-app.listen(port, () => {
-  console.log(`Server is up and running on port ${port}`);
-});
+const connection = mongoose.connect(uriDb);
+
+connection
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running. Use our API on port: ${PORT}`);
+    });
+  })
+  .catch((err) =>
+    console.log(`Server not running. Error message: ${err.message}`)
+  );
