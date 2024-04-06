@@ -4,7 +4,7 @@ const { HttpError } = require('./httpError');
 const customWriteFile = async (filename, data) => {
   try {
     await fs.writeFile(filename, JSON.stringify(data, null, 4));
-  } catch (error) {
+  } catch (err) {
     throw new HttpError(500, 'Server error', 'Can not write file');
   }
 };
