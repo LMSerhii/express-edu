@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon app.js",
-    "build": "babel src -d lib",
-    "prebuild": "jest"
+    "start": "node index.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
