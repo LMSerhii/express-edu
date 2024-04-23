@@ -46,10 +46,17 @@ const deleteUser = catchAsync(async (req, res) => {
   res.sendStatus(204);
 });
 
+const getMe = catchAsync(async (req, res) => {
+  res.status(200).json({
+    user: req.user,
+  });
+});
+
 module.exports = {
   createUser,
   getUsers,
   getUserById,
   updateUser,
   deleteUser,
+  getMe,
 };

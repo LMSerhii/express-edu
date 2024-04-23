@@ -1,4 +1,7 @@
+const { userRoles } = require('../constans/userRols');
 const { User } = require('../models/userModel');
+const { HttpError } = require('../utils/httpError');
+const { signToken } = require('./jwtService');
 
 /**
  * function to return all users
@@ -57,10 +60,44 @@ const createUser = async (userDetails) => {
   return user;
 };
 
+const checkUserExists = (filter) => User.exists(filter);
+
+const signUser = async (userDetails) => {
+  const user = await User.create({
+    ...userDetails,
+    role: userRoles.USER,
+  });
+
+  const token = signToken(user.id);
+
+  user.password = undefined;
+
+  return { user, token };
+};
+
+const loginUser = async ({ email, password }) => {
+  const user = await User.findOne({ email }).select('+password');
+
+  if (!user) throw new HttpError(401, 'Unauthorized');
+
+  const passwordIsValid = await user.checkUserPassword(password, user.password);
+
+  if (!passwordIsValid) throw new HttpError(401, 'Unauthorized');
+
+  const token = signToken(user.id);
+
+  user.password = undefined;
+
+  return { user, token };
+};
+
 module.exports = {
   getAllUsers,
   getOneUser,
   removeUser,
   refreshUser,
   createUser,
+  checkUserExists,
+  signUser,
+  loginUser,
 };

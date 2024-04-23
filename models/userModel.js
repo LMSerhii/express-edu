@@ -1,7 +1,8 @@
 const { Schema, model } = require('mongoose');
+const bcrypt = require('bcrypt');
 const { userRoles } = require('../constans/userRols');
 
-const user = new Schema(
+const userSchema = new Schema(
   {
     name: {
       type: String,
@@ -30,7 +31,21 @@ const user = new Schema(
   }
 );
 
-const User = model('user', user);
+// Pre-save hook fires on "save" and "create" methods.
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+
+  next();
+});
+
+// const isPasswordValid = await bcrypt.compare('Pass_1234', passwordHash);
+userSchema.methods.checkUserPassword = (candidate, passwordHash) =>
+  bcrypt.compare(candidate, passwordHash);
+
+const User = model('user', userSchema);
 
 module.exports = {
   User,

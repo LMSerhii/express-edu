@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+const { authRouter } = require('./routes/authRouter');
 const { userRouter } = require('./routes/userRouter');
 
 const app = express();
@@ -35,6 +36,7 @@ app.get('/ping', (req, res) => {
 
 const pathPrefix = '/api/v1';
 
+app.use(`${pathPrefix}/auth`, authRouter);
 app.use(`${pathPrefix}/users`, userRouter);
 
 // ============= Error handler =========
@@ -49,12 +51,11 @@ app.use((_, res, __) => {
 });
 
 app.use((err, _, res, __) => {
-  console.log(err.stack);
-  res.status(500).json({
-    status: 'fail',
-    code: 500,
-    message: err.message,
-    data: 'Internal Server Error',
+  const { status = 500, message = 'Server error', data } = err;
+  res.status(status).json({
+    status,
+    message,
+    data,
   });
 });
 
@@ -69,6 +70,7 @@ connection
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running. Use our API on port: ${PORT}`);
+      console.log('DB conected ...');
     });
   })
   .catch((err) =>

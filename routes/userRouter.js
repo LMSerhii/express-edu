@@ -6,6 +6,7 @@ const {
   getUserById,
   updateUser,
   deleteUser,
+  getMe,
 } = require('../controllers/userControllers');
 
 const {
@@ -13,6 +14,7 @@ const {
   checkUserData,
   checkUpdateUserData,
 } = require('../middlewares/userMiddlewares');
+const { protect } = require('../middlewares/authMiddlewares');
 
 // ============= CRUD ===============
 /**
@@ -26,13 +28,15 @@ const router = Router();
 
 router.post('/', checkUserData, createUser);
 
-router.get('/', getUsers);
+router.get('/me', protect, getMe);
 
-router.get('/:id', checkUserId, getUserById);
+router.get('/', protect, getUsers);
 
-router.patch('/:id', checkUserId, checkUpdateUserData, updateUser);
+router.get('/:id', protect, checkUserId, getUserById);
 
-router.delete('/:id', checkUserId, deleteUser);
+router.patch('/:id', protect, checkUserId, checkUpdateUserData, updateUser);
+
+router.delete('/:id', protect, checkUserId, deleteUser);
 
 module.exports = {
   userRouter: router,
