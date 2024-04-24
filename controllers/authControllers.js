@@ -1,5 +1,6 @@
 const { catchAsync } = require('../utils/catchAsync');
 const servicesDB = require('../services/servicesDB');
+const { sendEmail } = require('../services/emailService');
 
 const signup = catchAsync(async (req, res) => {
   const { user, token } = await servicesDB.signUser(req.body);
@@ -15,6 +16,8 @@ const signup = catchAsync(async (req, res) => {
 
 const login = catchAsync(async (req, res) => {
   const { user, token } = await servicesDB.loginUser(req.body);
+
+  sendEmail(user.email, user.name, token);
 
   res.status(200).json({
     token,

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { HttpError } = require('../utils/httpError');
 
 const signToken = (id) => {
+  console.log(process.env.JWT_SECRET_KEY);
   const token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
